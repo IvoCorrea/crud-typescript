@@ -28,16 +28,20 @@ App.post('/tasks', async (req: Request, res: Response) => {
                 duedate
             }
         });
-        return res.status(201).send('your task has been created')
+        return res.status(201).json({
+            message: "Your task has been created"
+        });
     }
     catch (err) {
-        res.status(500).send('Db error')
+        res.status(500).json({
+            message: `Internal Error: ${err}`
+        })
     };
 
 });
 
 // READ
-App.get('/tasks', async (res: Response) => {
+App.get('/tasks', async (req: Request, res: Response) => {
     const tasks = await prisma.task.findMany();
 
     res.status(200).json(tasks);
@@ -52,17 +56,47 @@ App.get('/tasks/:id', async (req: Request, res: Response) => {
 
     try {
         const tasks = await prisma.task.findUnique({
-            where: {id: id}
+            where: { id: id }
         });
 
-        res.json(tasks);
-    } 
+        return res.status(200).json(tasks);
+    }
     catch (err) {
         console.error(err)
+        return res.status(500).json({
+            error: `Internal Error: ${err}`
+        })
     };
 });
 //UPDATE
-//App.put('/tasks/:id');
+App.put('/tasks/:id', async (req: Request, res: Response) => {
+    const tasksParams = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
+    })
+    const tasksBody = z.object({
+        status: z.string()
+    })
+    const { id } = tasksParams.parse(req.params)
+    const { status } = tasksBody.parse(req.body)
+
+    try {
+        await prisma.task.update({
+            where: { id: id },
+            data: {
+                status
+            }
+        });
+
+        return res.json({
+            message: "Your task has been updated"
+        });
+    } catch (err) {
+        console.error(err);
+        return res.json({
+            error: `Internal Error: ${err}`
+        })
+    };
+});
 
 //DELETE
 //App.delete('/tasks/:id');
