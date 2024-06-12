@@ -130,5 +130,6 @@ dist
 .pnp.*
 
 node_modules
+.http
 # Keep environment variables out of version control
 .env
