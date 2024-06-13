@@ -69,15 +69,12 @@ App.get('/tasks/:id', async (req: Request, res: Response) => {
     };
 });
 //UPDATE
-App.put('/tasks/:id', async (req: Request, res: Response) => {
-    const tasksParams = z.object({
-        id: z.string().transform((val) => parseInt(val, 10)),
-    })
+App.put('/tasks', async (req: Request, res: Response) => {
     const tasksBody = z.object({
+        id: z.string().transform((val) => parseInt(val, 10)),
         status: z.string()
     })
-    const { id } = tasksParams.parse(req.params)
-    const { status } = tasksBody.parse(req.body)
+    const { id, status } = tasksBody.parse(req.body)
 
     try {
         await prisma.task.update({
@@ -90,15 +87,37 @@ App.put('/tasks/:id', async (req: Request, res: Response) => {
         return res.json({
             message: "Your task has been updated"
         });
-    } catch (err) {
+    }
+    catch (err) {
         console.error(err);
         return res.json({
             error: `Internal Error: ${err}`
-        })
+        });
     };
 });
 
 //DELETE
-//App.delete('/tasks/:id');
+App.delete('/tasks', async (req: Request, res: Response) => {
+    const taskBody = z.object({
+        title: z.string()
+    });
+    const { title } = taskBody.parse(req.body);
+
+    try {
+        await prisma.task.deleteMany({
+            where: {title: title},
+        });
+
+        return res.status(200).json({
+            message: "Your task has been deleted"
+        });
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            error: `Internal Error: ${err}`
+        })
+    };
+});
 
 App.listen(port, () => console.log(`http://localhost:${port}`));
